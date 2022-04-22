@@ -2,7 +2,7 @@
 
 #shopt -s extglob
 
-file_path="/home/ewan/becode/Bash_Scripting_Introduction/Ewan_Gilchrist/Are_You_My_Friend"
+file_path="/home/$USER/becode/Bash_Scripting_Introduction/Ewan_Gilchrist/Are_You_My_Friend" #CHANGETHIS
 
 if [ ! -f ~/.local/bin/bert ]; then
     case :$PATH: in
@@ -35,16 +35,20 @@ weather() {
 }
 
 introPostSpeak() {
+    local yesText="Thank you! Ah that's better"
+    local noText="Oh ok... well that's ok."
+    local introText="Shall I tell you what I can do? Type help if you want me to. Or if you already know go ahead and type it now..."
     if [ "$speak" == "yes" ]; then
-        echo "Now\n"
-        espeak-ng "Now"
+        echo "$yesText"
+        espeak-ng "$yesText"
         sleep 1
-        espeak-ng "Shall I you tell what I can do? Type help if you want me to. Or if you already know go ahead and type it now..."
-        echo -e "Shall I you tell what I can do?\nType help if you want me to\nor if you already know go ahead and type it now..."
+        echo -e "$introText"
+        espeak-ng "$introText"
+
     else
-        echo -e "Now"
+        echo -e "$noText"
         sleep 1
-        echo -e "Shall I you tell what I can do?\nType help if you want me to\nor if you already know go ahead and type it now..."
+        echo -e "$introText"
     fi
 }
 
@@ -93,20 +97,37 @@ cheakForEspeak() {
     fi
 }
 
-main() {
-    #Interactive Mode
-    intro $1 $2 $3 $4 $5
-    #echo from main $function $arguments
+mainLogic() {
     if [ -z $function ]; then
         echo "Don't be shy! Ask away."
     else
         case $function in
+        help)
+            helpText="I am happy to help! I can tell you date and time. Type time for this. I can tell you a joke. Type joke for this. I can also calculate some basic maths for you. Type calculate followed by two numbers seperated by an arithmetic operator. You can type your choice now..."
+            case $speak in
+            yes)
+                echo $helpText
+                echo $helpText | espeak-ng
+                ;;
+            no)
+                echo $helpText
+                ;;
+            esac
+            read -a choice
+            function=${choice[0]}
+            argument1=${choice[1]}
+            argument2=${choice[2]}
+            argument3=${choice[3]}
+            mainLogic $function $argument1 $argument2 $argument3
+            ;;
         weather | Weather)
             echo $argument1
             if [ -z $argument1 ]; then
                 case $speak in
                 yes)
+                    echo "Here is the Weather where you are"
                     espeak-ng "Here is the Weather where you are"
+                    echo $(weather)
                     echo $(weather) | sed "s/+//" | espeak-ng
                     ;;
                 *)
@@ -179,6 +200,13 @@ main() {
             ;;
         esac
     fi
+}
+
+main() {
+    #Interactive Mode
+    intro $1 $2 $3 $4 $5
+    #echo from main $function $arguments
+    mainLogic $function $argument1 $argument2 $argument3
 }
 
 main $1 $2 $3 $4 $5
